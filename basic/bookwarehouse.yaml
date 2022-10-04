@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bookwarehouse
+  namespace: bookwarehouse
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bookwarehouse
+  namespace: bookwarehouse
+  labels:
+    app: bookwarehouse
+spec:
+  ports:
+    - port: 14001
+      name: bookwarehouse-port
+
+  selector:
+    app: bookwarehouse
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bookwarehouse
+  namespace: "bookwarehouse"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bookwarehouse
+  template:
+    metadata:
+      labels:
+        app: bookwarehouse
+        version: v1
+    spec:
+      serviceAccountName: bookwarehouse
+      containers:
+        # Main container with APP
+        - name: bookwarehouse
+          image: openservicemesh/bookwarehouse:latest-main
+          imagePullPolicy: Always
+          command: ["/bookwarehouse"]
+          env:
+            - name: IDENTITY
+              value: bookwarehouse.k8s
+
+          resources:
+            requests:
+              cpu: 250m
+            limits:
+              cpu: 500m
+              memory: 500M
+---
+
