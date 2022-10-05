@@ -1,7 +1,7 @@
 # Note: Download OSM executable and place it in the same directory as this script
 
 # Install OSM with obervability tools
-./osm install --set=osm.deployPrometheus=true,osm.deployGrafana=true,osm.deployJaeger=true,osm.tracing.enable=true,osm.enablePermissiveTrafficPolicy=false
+./osm install --set=osm.deployPrometheus=true,osm.deployGrafana=true,osm.deployJaeger=true,osm.tracing.enable=true,osm.enablePermissiveTrafficPolicy=false,osm.enableEgress=false
 
 # Create namespaces
 for i in bookstore bookbuyer bookthief bookwarehouse; do kubectl create ns $i; done
@@ -25,5 +25,8 @@ kubectl wait --namespace ingress-nginx \
 kubectl apply -f basic/.
 
 # Expose prometheus and Grafana UI
+OSM_POD=$(kubectl get pods -n osm-system --no-headers --selector app=jaeger | awk 'NR==1{print $1}')
+
 kubectl port-forward -n osm-system svc/osm-prometheus 7070:7070 &
-kubectl port-forward -n osm-system svc/osm-grafana 3000:3000
+kubectl port-forward -n osm-system svc/osm-grafana 3000:3000 &
+kubectl port-forward -n osm-system "$OSM_POD" 16686:16686

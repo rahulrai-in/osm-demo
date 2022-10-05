@@ -1,8 +1,10 @@
+# Create bookbuyer Service Account
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: bookbuyer
   namespace: bookbuyer
+
 ---
 apiVersion: v1
 kind: Service
@@ -17,7 +19,9 @@ spec:
       name: http-bookbuyer
   selector:
     app: bookbuyer
+
 ---
+# Create bookbuyer Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -36,28 +40,19 @@ spec:
         version: v1
     spec:
       serviceAccountName: bookbuyer
+      nodeSelector:
+        kubernetes.io/arch: amd64
+        kubernetes.io/os: linux
       containers:
-        # Main container with APP
         - name: bookbuyer
-          image: openservicemesh/bookbuyer:latest-main
+          image: openservicemesh/bookbuyer:v1.0.0
           imagePullPolicy: Always
-          ports:
-            - containerPort: 14001
-              name: web
           command: ["/bookbuyer"]
           env:
             - name: "BOOKSTORE_NAMESPACE"
               value: bookstore
             - name: "BOOKSTORE_SVC"
               value: bookstore
-            - name: "CI_MAX_ITERATIONS_THRESHOLD"
-              value: "0"
-            - name: "ENABLE_EGRESS"
-              value: "true"
-            - name: "CI_CLIENT_CONCURRENT_CONNECTIONS"
-              value: "1"
-            - name: "CI_SLEEP_BETWEEN_REQUESTS_SECONDS"
-              value: "1"
           resources:
             requests:
               cpu: 250m

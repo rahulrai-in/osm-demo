@@ -14,7 +14,7 @@ spec:
     - port: 3306
       targetPort: 3306
       name: client
-      appProtocol: tcp-server-first
+      appProtocol: tcp
   selector:
     app: mysql
   clusterIP: None
@@ -68,31 +68,3 @@ spec:
         resources:
           requests:
             storage: 250M
----
-kind: TrafficTarget
-apiVersion: access.smi-spec.io/v1alpha3
-metadata:
-  name: mysql
-  namespace: bookwarehouse
-spec:
-  destination:
-    kind: ServiceAccount
-    name: mysql
-    namespace: bookwarehouse
-  rules:
-    - kind: TCPRoute
-      name: mysql
-  sources:
-    - kind: ServiceAccount
-      name: bookwarehouse
-      namespace: bookwarehouse
----
-apiVersion: specs.smi-spec.io/v1alpha4
-kind: TCPRoute
-metadata:
-  name: mysql
-  namespace: bookwarehouse
-spec:
-  matches:
-    ports:
-      - 3306

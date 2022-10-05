@@ -1,39 +1,30 @@
+# Create bookstore-v2 Service
 apiVersion: v1
 kind: Service
 metadata:
-  name: bookstore
+  name: bookstore-v2
   namespace: bookstore
   labels:
     app: bookstore
+    version: v2
 spec:
   ports:
     - port: 14001
       name: bookstore-port
   selector:
     app: bookstore
+    version: v2
+
 ---
+# Create bookstore-v2 Service Account
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: bookstore-v2
   namespace: bookstore
+
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: bookstore-v2
-  namespace: bookstore
-  labels:
-    app: bookstore
-    version: v2
-spec:
-  ports:
-    - port: 14001
-      name: bookstore-port
-  selector:
-    app: bookstore
-    version: v2
----
+# Create bookstore-v2 Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -52,54 +43,50 @@ spec:
         version: v2
     spec:
       serviceAccountName: bookstore-v2
+      nodeSelector:
+        kubernetes.io/arch: amd64
+        kubernetes.io/os: linux
       containers:
-        - image: openservicemesh/bookstore:latest-main
+        - name: bookstore
+          image: openservicemesh/bookstore:latest-main
           imagePullPolicy: Always
-          name: bookstore
           ports:
             - containerPort: 14001
               name: web
           command: ["/bookstore"]
           args: ["--port", "14001"]
           env:
-            - name: IDENTITY
-              value: bookstore-v2.k8s
             - name: BOOKWAREHOUSE_NAMESPACE
               value: bookwarehouse
-
-          # OSM's mutating webhook will rewrite this liveness probe to /osm-liveness-probe and
-          # Envoy will have a dedicated listener on port 15901 for this liveness probe
-          livenessProbe:
-            httpGet:
-              path: /liveness
-              port: 14001
-            initialDelaySeconds: 3
-            periodSeconds: 3
-
-          # OSM's mutating webhook will rewrite this readiness probe to /osm-readiness-probe and
-          # Envoy will have a dedicated listener on port 15902 for this readiness probe
-          readinessProbe:
-            failureThreshold: 10
-            httpGet:
-              path: /readiness
-              port: 14001
-              scheme: HTTP
-
-          # OSM's mutating webhook will rewrite this startup probe to /osm-startup-probe and
-          # Envoy will have a dedicated listener on port 15903 for this startup probe
-          startupProbe:
-            httpGet:
-              path: /startup
-              port: 14001
-            failureThreshold: 30
-            periodSeconds: 5
-
+            - name: IDENTITY
+              value: bookstore-v2
           resources:
             requests:
               cpu: 250m
             limits:
               cpu: 500m
               memory: 500M
+---
+kind: TrafficTarget
+apiVersion: access.smi-spec.io/v1alpha3
+metadata:
+  name: bookstore-v2
+  namespace: bookstore
+spec:
+  destination:
+    kind: ServiceAccount
+    name: bookstore-v2
+    namespace: bookstore
+  rules:
+    - kind: HTTPRouteGroup
+      name: bookstore-service-routes
+      matches:
+        - buy-a-book
+        - books-bought
+  sources:
+    - kind: ServiceAccount
+      name: bookbuyer
+      namespace: bookbuyer
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress

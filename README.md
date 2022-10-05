@@ -11,3 +11,4 @@ Observability tools:
 
 1. http://localhost:7070
 2. http://localhost:3000
+3. http://localhost:16686

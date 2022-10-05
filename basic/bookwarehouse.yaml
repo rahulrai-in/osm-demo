@@ -1,9 +1,12 @@
+# Create bookwarehouse Service Account
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: bookwarehouse
   namespace: bookwarehouse
+
 ---
+# Create bookwarehouse Service
 apiVersion: v1
 kind: Service
 metadata:
@@ -15,15 +18,16 @@ spec:
   ports:
     - port: 14001
       name: bookwarehouse-port
-
   selector:
     app: bookwarehouse
+
 ---
+# Create bookwarehouse Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: bookwarehouse
-  namespace: "bookwarehouse"
+  namespace: bookwarehouse
 spec:
   replicas: 1
   selector:
@@ -36,16 +40,14 @@ spec:
         version: v1
     spec:
       serviceAccountName: bookwarehouse
+      nodeSelector:
+        kubernetes.io/arch: amd64
+        kubernetes.io/os: linux
       containers:
-        # Main container with APP
         - name: bookwarehouse
           image: openservicemesh/bookwarehouse:latest-main
           imagePullPolicy: Always
           command: ["/bookwarehouse"]
-          env:
-            - name: IDENTITY
-              value: bookwarehouse.k8s
-
           resources:
             requests:
               cpu: 250m
