@@ -30,3 +30,6 @@ OSM_POD=$(kubectl get pods -n osm-system --no-headers --selector app=jaeger | aw
 kubectl port-forward -n osm-system svc/osm-prometheus 7070:7070 &
 kubectl port-forward -n osm-system svc/osm-grafana 3000:3000 &
 kubectl port-forward -n osm-system "$OSM_POD" 16686:16686
+
+# Use the following to launch the Envoy Admin API UI
+# kubectl port-forward -n bookbuyer pod/$(kubectl get pod -n bookbuyer -l app=bookbuyer -o jsonpath='{.items..metadata.name}') 15000:15000

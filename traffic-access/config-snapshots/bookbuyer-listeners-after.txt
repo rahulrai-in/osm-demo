@@ -1,0 +1,3 @@
+inbound-listener::0.0.0.0:15003
+inbound-prometheus-listener::0.0.0.0:15010
+outbound-listener::0.0.0.0:15001
