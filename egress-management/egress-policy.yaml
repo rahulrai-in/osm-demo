@@ -1,0 +1,16 @@
+# Egress policy to grant access to httpbin.org
+kind: Egress
+apiVersion: policy.openservicemesh.io/v1alpha1
+metadata:
+  name: httpbin-80
+  namespace: curl
+spec:
+  sources:
+    - kind: ServiceAccount
+      name: curl
+      namespace: curl
+  hosts:
+    - httpbin.org
+  ports:
+    - number: 80
+      protocol: http
